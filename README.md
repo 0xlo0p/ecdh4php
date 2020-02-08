@@ -13,6 +13,13 @@
 * 这样一来Alice和Bob仅仅通过交换自己的公钥ECDH_pub_key，就可以在Internet这种公开信道上共享一个相同密钥Key，然后用这个Key作为对称加密算法的密钥，进行加密通信。 
 * 而微信则是拿这个Key作为Aes密钥进行加解密通信数据
 
+# 编译测试方法
+1.确保php已开启openssl扩展以及服务器已经安装openssl
+```shell
+phpize
+./configure
+make && make install
+```
 
 # php使用方法以及结果
 ```php
@@ -32,10 +39,4 @@ array(2) {
 cpubkey为客户的公钥
 sharekey为共享的密钥，密钥交换的结果
 ```
-# 编译测试方法
-1.确保php已开启openssl扩展以及服务器已经安装openssl
-```shell
-phpize
-./configure
-make && make install
-```
+
