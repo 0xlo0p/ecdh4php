@@ -1,0 +1,8 @@
+wechat_ecdh.lo: /Users/loop/Documents/wechat_demo/wechat_ecdh/wechat_ecdh.c
+	$(LIBTOOL) --mode=compile $(CC) -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -I. -I/Users/loop/Documents/wechat_demo/wechat_ecdh $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS)  -c /Users/loop/Documents/wechat_demo/wechat_ecdh/wechat_ecdh.c -o wechat_ecdh.lo 
+$(phplibdir)/wechat_ecdh.la: ./wechat_ecdh.la
+	$(LIBTOOL) --mode=install cp ./wechat_ecdh.la $(phplibdir)
+
+./wechat_ecdh.la: $(shared_objects_wechat_ecdh) $(WECHAT_ECDH_SHARED_DEPENDENCIES)
+	$(LIBTOOL) --mode=link $(CC) $(COMMON_FLAGS) $(CFLAGS_CLEAN) $(EXTRA_CFLAGS) $(LDFLAGS)  -o $@ -export-dynamic -avoid-version -prefer-pic -module -rpath $(phplibdir) $(EXTRA_LDFLAGS) $(shared_objects_wechat_ecdh) $(WECHAT_ECDH_SHARED_LIBADD)
+

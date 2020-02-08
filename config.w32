@@ -1,0 +1,13 @@
+// $Id$
+// vim:ft=javascript
+
+// If your extension references something external, use ARG_WITH
+// ARG_WITH("wechat_ecdh", "for wechat_ecdh support", "no");
+
+// Otherwise, use ARG_ENABLE
+// ARG_ENABLE("wechat_ecdh", "enable wechat_ecdh support", "no");
+
+if (PHP_WECHAT_ECDH != "no") {
+	EXTENSION("wechat_ecdh", "wechat_ecdh.c", PHP_EXTNAME_SHARED, "/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
+}
+
