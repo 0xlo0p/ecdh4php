@@ -32,3 +32,10 @@ array(2) {
 cpubkey为客户的公钥
 sharekey为共享的密钥，密钥交换的结果
 ```
+# 编译测试方法
+1.确保php已开启openssl扩展以及服务器已经安装openssl
+```shell
+phpize
+./configure
+make && make install
+```
