@@ -5,7 +5,7 @@
 
 
 # ecdh 科普
-![mahua](http://mmbiz.qpic.cn/mmbiz/csvJ6rH9MctDOPR1TbFBSWx5aBUCibJsqbA48k433vyHrlibuG3ZjSLdibE6dj9hT50rlYicib8Dg9Aa2q3v9vLYU5A/0?wx_fmt=jpeg)
+![ecdh](http://mmbiz.qpic.cn/mmbiz/csvJ6rH9MctDOPR1TbFBSWx5aBUCibJsqbA48k433vyHrlibuG3ZjSLdibE6dj9hT50rlYicib8Dg9Aa2q3v9vLYU5A/0?wx_fmt=jpeg)
 
 * 首先看一个，会遭受到攻击的密钥协商过程。通信双方Alice和Bob使用ECDH密钥交换协议进行密钥协商，ECDH密钥交换协议拥有两个算法：
 * 密钥生成算法ECDH_Generate_Key，输出一个公钥和私钥对(ECDH_pub_key, ECDH_pri_key)，ECDH_pri_key需要秘密地保存，ECDH_pub_key可以公开发送给对方。
