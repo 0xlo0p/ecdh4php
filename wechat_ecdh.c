@@ -35,6 +35,7 @@
 #include <string.h>
 #include <stdio.h>
 //#include "md5.c"
+#define DEBUG false
 int String2Buffer(unsigned char *src, int srclen, unsigned char *dest)
 {
 	int i = 0;
@@ -92,26 +93,24 @@ static void disp(const char *str, const void *pbuf, const int size)
 	}
 	putchar('\n');
 }
+
 void handleErrors()
 {
 	printf("Error occurred.\n");
 }
 PHP_FUNCTION(compute_key_auto)
 {
-	int ECDH_SIZE = 57;
+	int ECDH_SIZE = 100;
 	char *spubkey;
 	int spublen;
 	ZEND_PARSE_PARAMETERS_START(1, 3)
 	Z_PARAM_STRING(spubkey, spublen)
 	ZEND_PARSE_PARAMETERS_END();
 	spublen = strlen(spubkey);
-
 	zval *subarray;
 	array_init(return_value);
-	//unsigned char spubkey_b[57] = {0x04, 0x45, 0x80, 0x0B, 0x42, 0x32, 0x68, 0xF0, 0x81, 0x73, 0x1A, 0xE1, 0xA8, 0x73, 0xE5, 0x34, 0x24, 0x27, 0xE8, 0xDD, 0xCD, 0x76, 0x8C, 0x01, 0x7D, 0x49, 0xA6, 0xBA, 0x34, 0x02, 0x17, 0xFD, 0x12, 0x97, 0x6E, 0xBD, 0x5D, 0x0A, 0x33, 0x2E, 0x8D, 0x6F, 0xA1, 0xC4, 0x5A, 0xF9, 0x2A, 0x12, 0x74, 0x41, 0x1D, 0xE1, 0x0B, 0x95, 0x0B, 0x77, 0xDC};
-	unsigned char spubkey_b[57];
-	String2Buffer(spubkey,spublen,spubkey_b);
-
+	unsigned char spubkey_b[ECDH_SIZE];
+	String2Buffer(spubkey, spublen, spubkey_b);
 	//Client ECDH
 	EC_KEY *ecdh = EC_KEY_new();
 	EC_POINT *point = NULL;
@@ -127,10 +126,14 @@ PHP_FUNCTION(compute_key_auto)
 	group = (struct ec_group_st *)EC_KEY_get0_group(ecdh);
 	if (0 == (len = EC_POINT_point2oct(group, point, POINT_CONVERSION_UNCOMPRESSED, pubkey, ECDH_SIZE, NULL)))
 		handleErrors();
-	printf("client_public_key_len=%d\n", len);
-	disp("client_public_key", pubkey, len);
-	unsigned char* cpubkey_hex=(unsigned char*)malloc(len*2);
-	Buffer2String(pubkey,len,cpubkey_hex);
+	if (DEBUG)
+	{
+		printf("client_public_key_len=%d\n", len);
+		disp("client_public_key", pubkey, len);
+	}
+
+	unsigned char *cpubkey_hex = (unsigned char *)malloc(len * 2);
+	Buffer2String(pubkey, len, cpubkey_hex);
 	/* Server ECDH */
 	EC_KEY *ecdh2 = EC_KEY_new();
 	EC_POINT *point2 = NULL;
@@ -150,40 +153,57 @@ PHP_FUNCTION(compute_key_auto)
 	group2 = (struct ec_group_st *)EC_KEY_get0_group(ecdh2);
 	if (0 == (len2 = EC_POINT_point2oct(group2, point2, POINT_CONVERSION_UNCOMPRESSED, pubkey2, ECDH_SIZE, NULL)))
 		handleErrors();
-	printf("Server_public_key_len=%d\n", len);
-	disp("Server_public_key", pubkey2, len2);
+	unsigned char *spubkey_hex = (unsigned char *)malloc(len2 * 2);
+	Buffer2String(pubkey2, len2, spubkey_hex);
+	if (DEBUG)
+	{
+		printf("Server_public_key_len=%d\n", len);
+		disp("Server_public_key", pubkey2, len2);
+	}
+
 	/* client */
 	//ComputeKey
 	point2c = EC_POINT_new(group);
-	EC_POINT_oct2point(group, point2c, pubkey2, ECDH_SIZE, NULL);
+	EC_POINT_oct2point(group, point2c, pubkey2, strlen(spubkey_hex) / 2, NULL);
 	if (0 != EC_POINT_cmp(group, point2, point2c, NULL))
 		handleErrors();
+
 	if (0 == (len = ECDH_compute_key(shared, ECDH_SIZE, point2c, ecdh, NULL)))
 		handleErrors();
-	printf("client_shared_len=%d\n", len);
-	disp("client_shared", shared, len);
+	if (DEBUG)
+	{
+		printf("client_shared_len=%d\n", len);
+		disp("client_shared", shared, len);
+	}
 	char sharedKey[32];
 	memset(sharedKey, 0, 16);
 	MD5(shared, len, sharedKey);
-	disp("client_sharedKey:", sharedKey, 16);
+	if (DEBUG)
+	{
+		disp("client_sharedKey:", sharedKey, 16);
+	}
 	/* Server */
 	//ComputeKey
 	pointc = EC_POINT_new(group2);
-	EC_POINT_oct2point(group2, pointc, pubkey, ECDH_SIZE, NULL);
+	EC_POINT_oct2point(group2, pointc, pubkey, strlen(cpubkey_hex) / 2, NULL);
 
 	if (0 != EC_POINT_cmp(group2, point, pointc, NULL))
 		handleErrors();
 	if (0 == (len2 = ECDH_compute_key(shared2, ECDH_SIZE, pointc, ecdh2, NULL)))
 		handleErrors();
-	printf("server_shared_len=%d\n", len2);
-	disp("server_shared2", shared2, len2);
-	MD5(shared, len, sharedKey+16);
-	disp("server_sharedKey:", sharedKey+16, 16);
+
+	MD5(shared, len, sharedKey + 16);
+	if (DEBUG)
+	{
+		printf("server_shared_len=%d\n", len2);
+		disp("server_shared2", shared2, len2);
+		disp("server_sharedKey:", sharedKey + 16, 16);
+	}
 	unsigned char final_shared[16];
-	memset(final_shared,0,16);
-	Buffer2String(sharedKey+16,16,final_shared);
+	memset(final_shared, 0, 16);
+	Buffer2String(sharedKey + 16, 16, final_shared);
 	//set return
-	
+
 	add_assoc_string(return_value, "cpubkey", cpubkey_hex);
 	add_assoc_string(return_value, "sharekey", final_shared);
 
@@ -193,6 +213,7 @@ PHP_FUNCTION(compute_key_auto)
 	free(cpubkey_hex);
 	/* Server */
 	EC_POINT_free(point2c);
+	free(spubkey_hex);
 	EC_KEY_free(ecdh2);
 }
 
